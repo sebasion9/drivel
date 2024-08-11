@@ -40,6 +40,9 @@ func main() {
     if(arg == "-b" || arg == "b" || arg == "back") {
         buffer = []byte("previous\n")
     }
+    if(arg == "-r" || arg == "r" || arg == "resume") {
+        buffer = []byte("resume\n")
+    }
     _, err = conn.Write(buffer)
     conn.Close()
     if (err != nil) {

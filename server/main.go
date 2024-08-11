@@ -75,6 +75,19 @@ func poll_events() {
             } else {
                 valid_event = true
             }
+        case strings.Contains(cmd, "resume"):
+            _,err1 := player.state()
+            _,err2 := player.resume()
+            if (err1 == nil && err2 == nil) {
+                valid_event = true;
+            } else {
+                if (err1 != nil) {
+                    pretty_error("",err1)
+                }
+                if (err2 != nil) {
+                    pretty_error("",err2)
+                }
+            }
         default:
             log.Printf("[FAIL] received event is in incorrect format: %s\n", cmd)
         }
@@ -84,7 +97,7 @@ func poll_events() {
     }
 }
 func main() {
-    log.Println("[0%] running goify server")
+    log.Println("[0%] running drivel server")
     refresh_token := os.Getenv("spot_refr")
     token, err := refresh(refresh_token);
     if (err != nil) {
