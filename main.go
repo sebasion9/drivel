@@ -1,57 +1,38 @@
 package main
 
 import (
-	"fmt"
-	"io"
-	"math"
-	"net/http"
-	"time"
+    "fmt"
+    "math"
+    "time"
+    "os"
 )
-const base_url = "https://api.spotify.com/v1"
 func main() {
-    token, err := auth();
+    refresh_token := os.Getenv("spot_refr")
+    token, err := refresh(refresh_token);
     if (err != nil) {
         pretty_error("couldnt fetch auth token", err)
         return
     }
-
-    // test
-    client := &http.Client{};
-    req, err := http.NewRequest("GET", base_url + "/search", nil)
-    req.Header.Set("Authorization", "Bearer " + token.Access_token);
-    q := req.URL.Query()
-    q.Add("limit","5");
-    q.Add("type","artist");
-    q.Add("q","franzl");
-    req.URL.RawQuery = q.Encode();
-    res, err := client.Do(req);
-    // test
-
+    body, err := pause(token)
     if (err != nil) {
-        pretty_error("test query failed", err);
+        pretty_error("failed pause action", err)
     }
-    body,err := io.ReadAll(res.Body);
-    if (err != nil) {
-        pretty_error("reading bytes failed", err);
-    }
-    fmt.Println(res.Status);
-    fmt.Println(string(body));
-    return
+    fmt.Println(body)
 
     start := time.Now();
     for true {
         // token refreshing
         if (time.Since(start) > time.Duration(token.Expires_in * int(math.Pow10(9)))) {
-            token, err = auth();
+            token, err = refresh(token.Refresh_Token);
             if (err != nil ){
-                pretty_error("couldnt fetch auth token", err)
+                pretty_error("couldnt refresh auth token", err)
                 return
             }
+            os.Setenv("spot_refr", token.Refresh_Token)
             start = time.Now()
         }
         // event listening logic
     }
-    fmt.Println(token)
 }
 
 func pretty_error(message string, err error) {
