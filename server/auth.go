@@ -3,7 +3,6 @@ package main
 import (
     "encoding/base64"
     "encoding/json"
-    "fmt"
     "io"
     "net/http"
     "net/url"
@@ -19,12 +18,14 @@ func get_env() (string, string, string) {
     code := os.Getenv("spot_code");
     return id, secret, code;
 }
+
 type JSONToken struct {
     Access_token string `json:"access_token"`
     Token_type string `json:"token_type"`
     Expires_in int `json:"expires_in"`
     Refresh_Token string `json:"refesh_token"`
 }
+
 func auth() (JSONToken, error) {
     var token JSONToken
     client_id, client_secret, code := get_env();
@@ -36,16 +37,19 @@ func auth() (JSONToken, error) {
 
     req, err := http.NewRequest("POST", auth_url, strings.NewReader(params.Encode()));
     if err != nil {
-        fmt.Printf("error creating POST request: %s\n", err)
-        return token, err
+        return token, &BuildRequestError{
+            Method: "POST",
+            Err : err,
+        }
     }
     auth_header_val := "Basic " + base64.RawStdEncoding.EncodeToString([]byte(client_id + ":" + client_secret));
     req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
     req.Header.Set("Authorization", auth_header_val)
     res, err := client.Do(req);
-
     if err != nil {
-        return token, err
+        return token, &DoRequestError{
+            Err : err,
+        }
     }
     body_as_bytes, err := io.ReadAll(res.Body)
     if err != nil {
@@ -55,9 +59,16 @@ func auth() (JSONToken, error) {
     if (err != nil) {
         return token, err
     }
-    fmt.Println(string(body_as_bytes))
+    body := string(body_as_bytes)
+    if (!res_ok(res.StatusCode)) {
+        return token, &NotOkResponseError{
+            Body: body,
+            Code: res.StatusCode,
+        }
+    }
     return token, nil
 }
+
 func refresh(refresh_token string) (JSONToken, error) {
     var token JSONToken;
     client_id, client_secret, _:= get_env();
@@ -68,11 +79,19 @@ func refresh(refresh_token string) (JSONToken, error) {
     params.Set("client_id", client_id)
     auth_header_val := "Basic " + base64.RawStdEncoding.EncodeToString([]byte(client_id + ":" + client_secret));
     req, err := http.NewRequest("POST", auth_url, strings.NewReader(params.Encode()));
+    if (err != nil) {
+        return token, &BuildRequestError{
+            Method: "POST",
+            Err: err,
+        }
+    }
     req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
     req.Header.Set("Authorization", auth_header_val)
     res,err := client.Do(req)
     if err != nil {
-        return token, err
+        return token, &DoRequestError{
+            Err : err,
+        }
     }
     body_as_bytes, err := io.ReadAll(res.Body)
     if err != nil {
@@ -81,6 +100,13 @@ func refresh(refresh_token string) (JSONToken, error) {
     err = json.Unmarshal(body_as_bytes,&token);
     if (err != nil) {
         return token, err
+    }
+    body := string(body_as_bytes)
+    if (!res_ok(res.StatusCode)) {
+        return token, &NotOkResponseError{
+            Body: body,
+            Code: res.StatusCode,
+        }
     }
     return token, nil
 }
