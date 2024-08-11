@@ -75,7 +75,7 @@ func (p *Player) skip(previous bool) (string, error) {
     }
     return p.Body, nil
 }
-
+// get state
 // resume
 // volume up/down
 // play a song from [search, playlists]

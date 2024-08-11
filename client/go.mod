@@ -1,3 +1,3 @@
-module goify_client
+module drivel_client
 
 go 1.19
