@@ -16,9 +16,10 @@ func help() {
 }
 func main() {
     args := os.Args[1:]
-    if(len(args) != 1) {
-        fmt.Printf("\tplease provide 1 arg\n")
+    if(len(args) < 1) {
+        fmt.Printf("\tplease provide args\n")
         fmt.Printf("\tgoify_client <cmd>\n")
+        fmt.Printf("\tgoify_client <search query>\n")
         return
     }
     arg := args[0]
@@ -31,19 +32,37 @@ func main() {
         log.Fatalf("failed connecting to goify server at '%s:%s'\n",ADDR,PORT)
     }
     var buffer []byte
-    if(arg == "-p" || arg == "p" || arg == "pause") {
+    actions := []string{"pause", "next", "previous", "resume"}
+    search := true
+    for _, action := range actions {
+        if(arg == action) {
+            search = false
+            buffer = []byte(arg+"\n")
+        }
+    }
+    if(search) {
+        query := "search"
+        for i := range args {
+            query += " " + args[i]
+        }
+        buffer = []byte(query + "\n")
+    }
+    /*
+    if(arg == "pause") {
         buffer = []byte("pause\n")
     }
-    if(arg == "-n" || arg == "n" || arg == "next") {
+    if(arg == "next") {
         buffer = []byte("next\n")
     }
-    if(arg == "-b" || arg == "b" || arg == "back") {
+    if(arg == "back") {
         buffer = []byte("previous\n")
     }
-    if(arg == "-r" || arg == "r" || arg == "resume") {
+    if(arg == "resume") {
         buffer = []byte("resume\n")
     }
+    */
     _, err = conn.Write(buffer)
+    fmt.Println(string(buffer))
     conn.Close()
     if (err != nil) {
         log.Fatalf("failed writing data: %s", string(buffer))

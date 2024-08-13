@@ -169,6 +169,3 @@ func (p *Player) resume() (string, error) {
     }
     return p.Body, nil
 }
-// play a song from [search, playlists]
-// volume up/down
-// toggle repeat/random
