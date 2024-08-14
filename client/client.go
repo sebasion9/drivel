@@ -17,6 +17,7 @@ func help() {
 func main() {
     args := os.Args[1:]
     if(len(args) < 1) {
+        fmt.Printf("\t%d\n", len(args))
         fmt.Printf("\tplease provide args\n")
         fmt.Printf("\tgoify_client <cmd>\n")
         fmt.Printf("\tgoify_client <search query>\n")
@@ -47,20 +48,6 @@ func main() {
         }
         buffer = []byte(query + "\n")
     }
-    /*
-    if(arg == "pause") {
-        buffer = []byte("pause\n")
-    }
-    if(arg == "next") {
-        buffer = []byte("next\n")
-    }
-    if(arg == "back") {
-        buffer = []byte("previous\n")
-    }
-    if(arg == "resume") {
-        buffer = []byte("resume\n")
-    }
-    */
     _, err = conn.Write(buffer)
     fmt.Println(string(buffer))
     conn.Close()

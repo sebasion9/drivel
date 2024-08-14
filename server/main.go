@@ -88,6 +88,14 @@ func poll_events() {
                     pretty_error("",err2)
                 }
             }
+        case strings.Contains(cmd, "search"):
+            _,err := player.search(cmd)
+            if (err != nil) {
+                pretty_error("",err)
+            } else {
+                valid_event = true
+            }
+
         default:
             log.Printf("[FAIL] received event is in incorrect format: %s\n", cmd)
         }

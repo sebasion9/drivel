@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 )
 type StateProc struct {
     Progress_Ms float64
@@ -169,3 +171,59 @@ func (p *Player) resume() (string, error) {
     }
     return p.Body, nil
 }
+func (p *Player) search(query string) (string, error) {
+    p.Body = ""
+    stripped_query := strings.Trim(strings.TrimSpace(strings.Join(strings.Split(query, "search"),"")), "\x00\x0A")
+    fmt.Println(stripped_query)
+    params := url.Values{}
+    params.Add("type","album,artist,track")
+    params.Add("q",stripped_query)
+
+    u, _ := url.ParseRequestURI(BASE_URL)
+    u.Path = "/v1/search"
+    u.RawQuery = params.Encode()
+    url_str := fmt.Sprintf("%v", u)
+
+    req, err := http.NewRequest("GET", url_str, nil)
+    if (err != nil) {
+	return p.Body, &BuildRequestError{
+	    Method: "GET",
+	    Err : err,
+	}
+    }
+    req.Header.Set("Authorization", "Bearer " + p.Token)
+    res, err := p.Client.Do(req)
+    fmt.Println(url_str)
+    if (err != nil) {
+	return p.Body, &DoRequestError{
+	    Err : err,
+	}
+    }
+    body_bytes, err := io.ReadAll(res.Body)
+    if (err != nil) {
+	return p.Body, err
+    }
+    p.Body = string(body_bytes)
+    if(!res_ok(res.StatusCode)) {
+	return p.Body, &NotOkResponseError{
+	    Body: p.Body,
+	    Code: res.StatusCode,
+	}
+    }
+    fmt.Println(p.Body)
+    return p.Body, nil
+    // send the request
+    // examine the response
+    // fetch the fields that are important to present in interface
+    return p.Body, nil
+}
+
+
+
+
+
+
+
+
+
+
